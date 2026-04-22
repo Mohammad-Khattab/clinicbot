@@ -27,4 +27,24 @@ async function sendReminder(appointment) {
   console.log(`Reminder sent to ${name} (${phone})`);
 }
 
-module.exports = { sendReminder };
+async function sendFollowup(appointment) {
+  const { name, phone, doctor } = appointment;
+  const reviewLink = process.env.GOOGLE_REVIEW_LINK || '';
+
+  const message =
+    `Hello ${name},\n\n` +
+    `We hope you're feeling well after your visit with ${doctor}.\n\n` +
+    `Do you have any concerns or questions we can help with?\n\n` +
+    (reviewLink ? `We'd also love to hear your feedback — a quick review means a lot to us:\n${reviewLink}\n\n` : '') +
+    `Thank you for trusting us with your health!`;
+
+  await client.messages.create({
+    from: process.env.TWILIO_WHATSAPP_FROM,
+    to: `whatsapp:${phone}`,
+    body: message,
+  });
+
+  console.log(`Follow-up sent to ${name} (${phone})`);
+}
+
+module.exports = { sendReminder, sendFollowup };

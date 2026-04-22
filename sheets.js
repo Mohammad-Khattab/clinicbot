@@ -1,7 +1,7 @@
 const { google } = require('googleapis');
 
 const SHEET_NAME = 'Appointments';
-const COLUMNS = { Name: 0, Phone: 1, DateTime: 2, Reason: 3, Doctor: 4, ReminderSent: 5 };
+const COLUMNS = { Name: 0, Phone: 1, DateTime: 2, Reason: 3, Doctor: 4, ReminderSent: 5, FollowupSent: 6 };
 
 function getAuth() {
   return new google.auth.JWT(
@@ -18,7 +18,7 @@ async function getAppointments() {
 
   const res = await sheets.spreadsheets.values.get({
     spreadsheetId: process.env.GOOGLE_SHEET_ID,
-    range: `${SHEET_NAME}!A2:F`,
+    range: `${SHEET_NAME}!A2:G`,
   });
 
   const rows = res.data.values || [];
@@ -30,6 +30,7 @@ async function getAppointments() {
     reason: row[COLUMNS.Reason] || '',
     doctor: row[COLUMNS.Doctor] || process.env.DOCTOR_NAME,
     reminderSent: row[COLUMNS.ReminderSent] || 'N',
+    followupSent: row[COLUMNS.FollowupSent] || 'N',
   }));
 }
 
@@ -45,4 +46,16 @@ async function markReminderSent(rowIndex) {
   });
 }
 
-module.exports = { getAppointments, markReminderSent };
+async function markFollowupSent(rowIndex) {
+  const auth = getAuth();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  await sheets.spreadsheets.values.update({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    range: `${SHEET_NAME}!G${rowIndex}`,
+    valueInputOption: 'RAW',
+    requestBody: { values: [['Y']] },
+  });
+}
+
+module.exports = { getAppointments, markReminderSent, markFollowupSent };
