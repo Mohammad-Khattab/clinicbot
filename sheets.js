@@ -58,4 +58,21 @@ async function markFollowupSent(rowIndex) {
   });
 }
 
-module.exports = { getAppointments, markReminderSent, markFollowupSent };
+async function saveAppointment(booking) {
+  const auth = getAuth();
+  const sheets = google.sheets({ version: 'v4', auth });
+
+  const { name, phone, dateTime, reason } = booking;
+  const doctor = process.env.DOCTOR_NAME || '';
+
+  await sheets.spreadsheets.values.append({
+    spreadsheetId: process.env.GOOGLE_SHEET_ID,
+    range: `${SHEET_NAME}!A:G`,
+    valueInputOption: 'RAW',
+    requestBody: {
+      values: [[name, phone, dateTime, reason, doctor, 'N', 'N']],
+    },
+  });
+}
+
+module.exports = { getAppointments, markReminderSent, markFollowupSent, saveAppointment };
