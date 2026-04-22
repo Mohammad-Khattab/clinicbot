@@ -21,11 +21,15 @@ app.post('/whatsapp/incoming', async (req, res) => {
   try {
     const { complete, reply, booking } = await handleMessage(phone, body);
 
-    await twilioClient.messages.create({
-      from: process.env.TWILIO_WHATSAPP_FROM,
-      to: from,
-      body: reply,
-    });
+    const messageBody = reply || (complete ? 'تم حجز موعدك بنجاح. سنتواصل معك قريباً!' : '');
+
+    if (messageBody) {
+      await twilioClient.messages.create({
+        from: process.env.TWILIO_WHATSAPP_FROM,
+        to: from,
+        body: messageBody,
+      });
+    }
 
     if (complete && booking) {
       await saveAppointment(booking);
