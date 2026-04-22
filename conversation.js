@@ -1,8 +1,8 @@
-const { GoogleGenerativeAI } = require('@google/generative-ai');
+const Groq = require('groq-sdk');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1' });
+const groq = new Groq({ apiKey: process.env.GROQ_API_KEY });
 
-// phone -> array of { role, parts }
+// phone -> array of { role, content }
 const sessions = new Map();
 
 const SYSTEM_PROMPT = `You are a friendly booking assistant for ${process.env.BUSINESS_NAME || 'our clinic'}.
@@ -28,18 +28,19 @@ async function handleMessage(phone, incomingText) {
 
   const history = sessions.get(phone);
 
-  const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash',
-    systemInstruction: SYSTEM_PROMPT,
+  history.push({ role: 'user', content: incomingText });
+
+  const response = await groq.chat.completions.create({
+    model: 'llama3-8b-8192',
+    messages: [
+      { role: 'system', content: SYSTEM_PROMPT },
+      ...history,
+    ],
   });
 
-  const chat = model.startChat({ history });
+  const reply = response.choices[0].message.content;
 
-  const result = await chat.sendMessage(incomingText);
-  const reply = result.response.text();
-
-  history.push({ role: 'user', parts: [{ text: incomingText }] });
-  history.push({ role: 'model', parts: [{ text: reply }] });
+  history.push({ role: 'assistant', content: reply });
 
   if (reply.includes('BOOKING_COMPLETE')) {
     const jsonMatch = reply.match(/BOOKING_COMPLETE\s*(\{.*\})/s);
