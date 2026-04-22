@@ -1,6 +1,6 @@
 const { GoogleGenerativeAI } = require('@google/generative-ai');
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY, { apiVersion: 'v1' });
 
 // phone -> array of { role, parts }
 const sessions = new Map();
@@ -29,7 +29,7 @@ async function handleMessage(phone, incomingText) {
   const history = sessions.get(phone);
 
   const model = genAI.getGenerativeModel({
-    model: 'gemini-1.5-flash-latest',
+    model: 'gemini-1.5-flash',
     systemInstruction: SYSTEM_PROMPT,
   });
 
