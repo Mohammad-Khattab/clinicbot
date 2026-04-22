@@ -29,13 +29,11 @@ async function sendReminder(appointment) {
 
 async function sendFollowup(appointment) {
   const { name, phone, doctor } = appointment;
-  const reviewLink = process.env.GOOGLE_REVIEW_LINK || '';
 
   const message =
     `Hello ${name},\n\n` +
     `We hope you're feeling well after your visit with ${doctor}.\n\n` +
     `Do you have any concerns or questions we can help with?\n\n` +
-    (reviewLink ? `We'd also love to hear your feedback — a quick review means a lot to us:\n${reviewLink}\n\n` : '') +
     `Thank you for trusting us with your health!`;
 
   await client.messages.create({
